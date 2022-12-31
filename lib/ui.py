@@ -5,6 +5,7 @@ from PySide6 import QtCore, QtWidgets, QtGui
 
 from . import data as data_lib
 from . import image_cache
+from . import config as config_lib
 
 class TeamLayout(QtWidgets.QVBoxLayout):
     def __init__(self):
@@ -60,18 +61,29 @@ class TeamLayout(QtWidgets.QVBoxLayout):
                 self.score_label.setText("")
 
 class SportsStatusUI(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, debug=False):
         super().__init__()
         
-        self.events = list()
+        # Parameters
+        self.debug = debug
 
+        # Build
         self.apply_style()
         self.create_widgets()
         self.create_threads()
 
+        # Initialization
+        self.events = list()
+        self.current_event_index = 0
+        
         # Start with an empty list
         self.set_events(list())
+
+        # Dependents
+        self.config = config_lib.SportsStatusConfig()
         
+        # Actually start running
+        self.start_threads()
         self.showFullScreen()
     
     def apply_style(self):
@@ -118,35 +130,47 @@ class SportsStatusUI(QtWidgets.QWidget):
 
     def data_retreival_thread_work(self):
         while True:
-            data = data_lib.query_new_data()
-            events = data.get_flattened_events()
-            self.set_events(events)
+            events = data_lib.query_filtered_data(self.config)
+            filtered_events = self.config.filter_event_list(events)
+
+            self.set_events(filtered_events)
             
-            time.sleep(300)
+            time.sleep(self.config.refresh_data_period_seconds)
 
     def cycle_events_thread_work(self):
         while True:
             self.show_next_event()
 
-            time.sleep(10)
+            time.sleep(self.config.event_cycle_period_seconds)
 
     def create_threads(self):
         self.data_thread = threading.Thread(target=self.data_retreival_thread_work, daemon=True)
-        self.data_thread.start()
-        
         self.cycle_thread = threading.Thread(target=self.cycle_events_thread_work, daemon=True)
+    
+    def start_threads(self):
+        self.data_thread.start()
         self.cycle_thread.start()
     
     def set_events(self, events):
-        # TODO this should be more elegant so we don't just jump back to the start
+        if len(self.events) > 0:
+            previous_event_id = self.events[self.current_event_index].id
+        else:
+            previous_event_id = None
+
         self.events = events
+
+        if self.debug:
+            print("Assigned {} events to UI".format(len(self.events)))
+        
+        # Set to 0 in case we don't find the same event
         self.current_event_index = 0
 
-        if len(self.events) > 0:
-            print("Assigned {} events to UI".format(len(self.events)))
-            self.show_event(self.events[0])
-        else:
-            self.show_event(None)
+        if previous_event_id:
+            for index in range(len(self.events)):
+                if self.events[index].id == previous_event_id:
+                    self.current_event_index = index
+
+        self.update_current_event()
     
     def show_previous_event(self):
         self.move_event(-1)
@@ -164,9 +188,15 @@ class SportsStatusUI(QtWidgets.QWidget):
         if self.current_event_index < 0:
             self.current_event_index = len(self.events) + self.current_event_index
         elif self.current_event_index >= len(self.events):
-            self.current_event_index = self.current_event_index - len(self.events) - 1
+            self.current_event_index = self.current_event_index % len(self.events)
+            
+        self.update_current_event()
         
-        self.show_event(self.events[self.current_event_index])
+    def update_current_event(self):
+        if len(self.events) < 1:
+            self.show_event(None)
+        else:
+            self.show_event(self.events[self.current_event_index])
     
     def show_event(self, event):
         if not event:
@@ -178,7 +208,8 @@ class SportsStatusUI(QtWidgets.QWidget):
             self.game_time_label.setText("")
             self.period_label.setText("")
         else:
-            print("Showing event: {}".format(event.name))
+            if self.debug:
+                print("Showing event: {}".format(event.name))
 
             self.scheduled_time_label.setText(event.datetime.strftime("%I:%M %p"))
 

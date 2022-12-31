@@ -1,0 +1,63 @@
+{
+    "REMINDER": "Move to root directory and rename to 'config.json'",
+    "event_cycle_period_seconds": 10,
+    "refresh_data_period_seconds": 60,
+    "filter": {
+        "sports":
+        [
+            {
+                "slug": "football",
+                "leagues": [
+                    {
+                        "abbreviation": "NFL",
+                        "competitors": [
+                            {
+                                "name": "Vikings"
+                            }
+                        ]
+                    }
+                ]
+                                    
+            },
+            {
+                "slug": "baseball",
+                "leagues": [
+                    {
+                        "abbreviation": "MLB",
+                        "competitors": [
+                            {
+                                "name": "Twins"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "slug": "basketball",
+                "leagues": [
+                    {
+                        "abbreviation": "NBA",
+                        "competitors": [
+                            {
+                                "name": "Timberwolves"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "slug": "hockey",
+                "leagues": [
+                    {
+                        "abbreviation": "NHL",
+                        "competitors": [
+                            {
+                                "name": "Wild"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

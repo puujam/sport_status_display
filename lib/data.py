@@ -101,6 +101,10 @@ class ESPNEvent():
     @property
     def name(self):
         return self.data["name"]
+    
+    @property
+    def id(self):
+        return self.data["id"]
 
 class ESPNLeague():
     def __init__(self, data, sport):
@@ -190,3 +194,19 @@ def query_new_data():
     data = requests.get("https://site.api.espn.com/apis/v2/scoreboard/header")
 
     return ESPNData(data.json())
+
+def query_filtered_data(config):
+    results = list()
+
+    sport_league_list = config.get_filter_sports_and_leagues_list()
+    
+    for sport_league in sport_league_list:
+        query_url = "https://site.api.espn.com/apis/v2/scoreboard/header?sport={}&league={}".format(sport_league[0], sport_league[1])
+        
+        data = requests.get(query_url)
+        data_object = ESPNData(data.json())
+        events = data_object.get_flattened_events()
+        
+        results.extend(events)
+    
+    return results

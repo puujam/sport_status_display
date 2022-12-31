@@ -6,7 +6,7 @@ from lib import ui as ui_lib
 def main():
     app = QtWidgets.QApplication([])
 
-    ui = ui_lib.SportsStatusUI()
+    ui = ui_lib.SportsStatusUI(debug=False)
     ui.show()
     
     sys.exit(app.exec())
