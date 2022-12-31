@@ -1,4 +1,5 @@
 import requests
+import time
 import datetime
 import enum
 
@@ -93,7 +94,8 @@ class ESPNEvent():
     @property
     def datetime(self):
         if not hasattr( self, "_datetime" ):
-            utc_datetime = datetime.datetime.fromisoformat(self.data["date"])
+            parsed_datetime = time.strptime(self.data["date"], "%Y-%m-%dT%H:%M:%SZ")
+            utc_datetime = datetime.datetime(year=parsed_datetime.tm_year, month=parsed_datetime.tm_mon, day=parsed_datetime.tm_mday, hour=parsed_datetime.tm_hour, minute=parsed_datetime.tm_min, second=parsed_datetime.tm_sec, tzinfo=datetime.timezone.utc)
             self._datetime = utc_datetime.astimezone() # No parameter converts to local
         
         return self._datetime

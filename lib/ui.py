@@ -1,4 +1,5 @@
 import time
+import datetime
 import threading
 from contextlib import suppress
 from PySide6 import QtCore, QtWidgets, QtGui
@@ -211,7 +212,18 @@ class SportsStatusUI(QtWidgets.QWidget):
             if self.debug:
                 print("Showing event: {}".format(event.name))
 
-            self.scheduled_time_label.setText(event.datetime.strftime("%I:%M %p"))
+            time_of_day_string = event.datetime.strftime("%I:%M %p").lstrip("0")
+            current_datetime = datetime.datetime.now()
+            if event.datetime.date() > current_datetime.date():
+                day_string = "Tomorrow "
+            elif event.datetime.date() < current_datetime.date():
+                day_string = "Yesterday "
+            else:
+                day_string = ""
+                
+            time_string = "{}{}".format(day_string, time_of_day_string)
+
+            self.scheduled_time_label.setText(time_string)
 
             team_1 = event.competitors[0]
             team_2 = event.competitors[1]
