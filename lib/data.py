@@ -22,6 +22,13 @@ class ESPNCompetitor():
     @property
     def logo_dark(self):
         return self.data["logoDark"]
+    
+    @property
+    def winner(self):
+        if not "winner" in self.data:
+            return None
+        else:
+            return self.data["winner"]
 
 class ESPNEventStatus():
     class ESPNEventStatusCategory(enum.IntEnum):

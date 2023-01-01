@@ -10,6 +10,7 @@ from . import config as config_lib
 
 STANDARD_FONT_SIZE = 50
 SCORE_FONT_SIZE = 100
+FONT_FAMILY = "Arial"
 
 class TeamLayout(QtWidgets.QVBoxLayout):
     def __init__(self):
@@ -31,7 +32,6 @@ class TeamLayout(QtWidgets.QVBoxLayout):
         self.addWidget(self.logo)
         
         self.score_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
-        self.score_label.setStyleSheet("font-size: {}px".format(SCORE_FONT_SIZE))
         self.score_label.setMaximumHeight(SCORE_FONT_SIZE)
         self.addWidget(self.score_label)
         
@@ -49,7 +49,7 @@ class TeamLayout(QtWidgets.QVBoxLayout):
 
         return super().eventFilter(source, event)
     
-    def show_team(self, team, event_started):
+    def show_team(self, team, event_started, event_ended):
         if not team:
             self.name_label.setText("")
             self.score_label.setText("")
@@ -57,12 +57,38 @@ class TeamLayout(QtWidgets.QVBoxLayout):
             self.update_image()
         else:
             image_cache.get_image_and_assign(team, self)
-            self.name_label.setText(team.name)
+            
+            if team.is_home:
+                home_text = " (Home)"
+            else:
+                home_text = ""
+
+            self.name_label.setText("{}{}".format(team.name, home_text))
 
             if event_started:
                 self.score_label.setText(team.score)
             else:
                 self.score_label.setText("")
+            
+            if event_ended and not team.winner:
+                self.logo.setDisabled(True)
+            else:
+                self.logo.setDisabled(False)
+            
+            if event_ended and team.winner:
+                font_weight = "bold"
+            else:
+                font_weight = "normal"
+
+            self.score_label.setStyleSheet("""
+                font-weight: {};
+                font-family: {};
+                font-size: {}px;
+                """.format(
+                    font_weight,
+                    FONT_FAMILY,
+                    SCORE_FONT_SIZE
+                ))
 
 class SportsStatusUI(QtWidgets.QWidget):
     def __init__(self, debug=False):
@@ -92,16 +118,19 @@ class SportsStatusUI(QtWidgets.QWidget):
     
     def apply_style(self):
         self.setStyleSheet("""
-        * {
+        * {{
             background-color: #0f0f0f;
-        }
+        }}
 
-        QLabel {
+        QLabel {{
             color: #ffffff;
-            font-family: Arial;
-            font-size: 50px;
-        }
-        """)
+            font-family: {};
+            font-size: {}px;
+        }}
+        """.format(
+            FONT_FAMILY,
+            STANDARD_FONT_SIZE
+        ))
 
     def create_widgets(self):
         primary_layout = QtWidgets.QVBoxLayout(self)
@@ -206,8 +235,8 @@ class SportsStatusUI(QtWidgets.QWidget):
         if not event:
             self.scheduled_time_label.setText("No Games Today")
             
-            self.team_1_layout.show_team(None, False)
-            self.team_2_layout.show_team(None, False)
+            self.team_1_layout.show_team(None, False, False)
+            self.team_2_layout.show_team(None, False, False)
 
             self.game_time_label.setText("")
             self.period_label.setText("")
@@ -232,15 +261,9 @@ class SportsStatusUI(QtWidgets.QWidget):
             team_2 = event.competitors[1]
             
             if not event.status.started:
-                self.team_1_layout.show_team(team_1, False)
-                self.team_2_layout.show_team(team_2, False)
-                
                 self.game_time_label.setText("")
                 self.period_label.setText("")
             else:
-                self.team_1_layout.show_team(team_1, True)
-                self.team_2_layout.show_team(team_2, True)
-
                 if not event.status.completed:
                     self.game_time_label.setText(event.status.display_clock)
                     # TODO: Make unique per sport
@@ -248,3 +271,6 @@ class SportsStatusUI(QtWidgets.QWidget):
                 else:
                     self.game_time_label.setText(event.status.description)
                     self.period_label.setText("")
+
+            self.team_1_layout.show_team(team_1, event.status.started, event.status.completed)
+            self.team_2_layout.show_team(team_2, event.status.started, event.status.completed)

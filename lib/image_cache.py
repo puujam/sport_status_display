@@ -11,11 +11,14 @@ if not os.path.isdir(image_cache_directory):
     os.makedirs(image_cache_directory)
 
 def get_image_and_assign_work(team, logo_layout):
+    # Clear the logo while we're loading the new one
+    logo_layout.local_image_path = None
+    logo_layout.update_image()
+
     image_url = team.logo_dark
 
     image_name = os.path.basename(image_url)
     league_name = image_url.split("/")[-4]
-
 
     local_league_path = os.path.join(image_cache_directory, league_name)
     local_image_path = os.path.join(local_league_path, image_name)
