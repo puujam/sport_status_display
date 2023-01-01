@@ -91,6 +91,8 @@ class TeamLayout(QtWidgets.QVBoxLayout):
                 ))
 
 class SportsStatusUI(QtWidgets.QWidget):
+    progress_changed = QtCore.Signal(int)
+
     def __init__(self, debug=False):
         super().__init__()
         
@@ -98,13 +100,14 @@ class SportsStatusUI(QtWidgets.QWidget):
         self.debug = debug
 
         # Build
-        self.apply_style()
         self.create_widgets()
         self.create_threads()
+        self.apply_style()
 
         # Initialization
         self.events = list()
         self.current_event_index = 0
+        self.cycle_event_time = 0
         
         # Start with an empty list
         self.set_events(list())
@@ -126,6 +129,17 @@ class SportsStatusUI(QtWidgets.QWidget):
             color: #ffffff;
             font-family: {};
             font-size: {}px;
+        }}
+        
+        QProgressBar {{
+            border-radius: 1px;
+            padding: 0px;
+            margin: 0px;
+            border: none;
+        }}
+        
+        QProgressBar::chunk {{
+            background-color: #ffffff;
         }}
         """.format(
             FONT_FAMILY,
@@ -149,6 +163,15 @@ class SportsStatusUI(QtWidgets.QWidget):
         self.period_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
         self.period_label.setMaximumHeight(STANDARD_FONT_SIZE)
         primary_layout.addWidget(self.period_label)
+        
+        self.progress_bar = QtWidgets.QProgressBar()
+        self.progress_bar.setTextVisible(False)
+        self.progress_bar.setMinimum(0)
+        self.progress_bar.setMaximum(100)
+        self.progress_bar.setValue(0)
+        self.progress_bar.setFixedHeight(10)
+        self.progress_changed.connect(self.progress_bar.setValue)
+        primary_layout.addWidget(self.progress_bar)
 
     def create_logo_widgets(self):
         teams_layout = QtWidgets.QHBoxLayout()
@@ -172,9 +195,18 @@ class SportsStatusUI(QtWidgets.QWidget):
 
     def cycle_events_thread_work(self):
         while True:
-            self.show_next_event()
+            cycle_time = time.time()
 
-            time.sleep(self.config.event_cycle_period_seconds)
+            if cycle_time > self.cycle_event_time:
+                self.show_next_event()
+                
+            start_time = self.cycle_event_time - self.config.event_cycle_period_seconds
+            since_start_time = cycle_time - start_time
+            progress_value = (since_start_time / self.config.event_cycle_period_seconds) * 100
+            
+            self.progress_changed.emit(progress_value)
+
+            time.sleep(0.01)
 
     def create_threads(self):
         self.data_thread = threading.Thread(target=self.data_retreival_thread_work, daemon=True)
@@ -187,8 +219,10 @@ class SportsStatusUI(QtWidgets.QWidget):
     def set_events(self, events):
         if len(self.events) > 0:
             previous_event_id = self.events[self.current_event_index].id
+            self.progress_bar.setVisible(True)
         else:
             previous_event_id = None
+            self.progress_bar.setVisible(False)
 
         self.events = events
 
@@ -212,6 +246,8 @@ class SportsStatusUI(QtWidgets.QWidget):
         self.move_event(1)
         
     def move_event(self, move_count):
+        self.cycle_event_time = time.time() + self.config.event_cycle_period_seconds
+
         if len(self.events) == 0:
             # Don't do anything for an empty event list
             return
@@ -222,7 +258,7 @@ class SportsStatusUI(QtWidgets.QWidget):
             self.current_event_index = len(self.events) + self.current_event_index
         elif self.current_event_index >= len(self.events):
             self.current_event_index = self.current_event_index % len(self.events)
-            
+
         self.update_current_event()
         
     def update_current_event(self):

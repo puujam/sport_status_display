@@ -11,10 +11,6 @@ if not os.path.isdir(image_cache_directory):
     os.makedirs(image_cache_directory)
 
 def get_image_and_assign_work(team, logo_layout):
-    # Clear the logo while we're loading the new one
-    logo_layout.local_image_path = None
-    logo_layout.update_image()
-
     image_url = team.logo_dark
 
     image_name = os.path.basename(image_url)
@@ -27,12 +23,17 @@ def get_image_and_assign_work(team, logo_layout):
         os.makedirs(local_league_path)
     
     if not os.path.isfile(local_image_path):
+        # Clear the logo while we're loading the new one
+        logo_layout.local_image_path = None
+        logo_layout.update_image()
+
         image_data = requests.get(image_url).content
         with open(local_image_path, "wb") as file_handle:
             file_handle.write(image_data)
     
-    logo_layout.local_image_path = local_image_path
-    logo_layout.update_image()
+    if local_image_path != logo_layout.local_image_path:
+        logo_layout.local_image_path = local_image_path
+        logo_layout.update_image()
 
 def get_image_and_assign(team, logo_layout):
     work_thread = threading.Thread(target=get_image_and_assign_work, args=[team, logo_layout])
