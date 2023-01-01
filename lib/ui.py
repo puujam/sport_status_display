@@ -8,6 +8,9 @@ from . import data as data_lib
 from . import image_cache
 from . import config as config_lib
 
+STANDARD_FONT_SIZE = 50
+SCORE_FONT_SIZE = 100
+
 class TeamLayout(QtWidgets.QVBoxLayout):
     def __init__(self):
         super().__init__()
@@ -18,7 +21,7 @@ class TeamLayout(QtWidgets.QVBoxLayout):
         
     def create_widgets(self):
         self.name_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
-        self.name_label.setMaximumHeight(20)
+        self.name_label.setMaximumHeight(STANDARD_FONT_SIZE)
         self.addWidget(self.name_label)
 
         self.logo = QtWidgets.QLabel()
@@ -28,8 +31,8 @@ class TeamLayout(QtWidgets.QVBoxLayout):
         self.addWidget(self.logo)
         
         self.score_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
-        self.score_label.setStyleSheet("font-size: 40px")
-        self.score_label.setMaximumHeight(40)
+        self.score_label.setStyleSheet("font-size: {}px".format(SCORE_FONT_SIZE))
+        self.score_label.setMaximumHeight(SCORE_FONT_SIZE)
         self.addWidget(self.score_label)
         
     def update_image(self):
@@ -96,7 +99,7 @@ class SportsStatusUI(QtWidgets.QWidget):
         QLabel {
             color: #ffffff;
             font-family: Arial;
-            font-size: 20px;
+            font-size: 50px;
         }
         """)
 
@@ -104,18 +107,18 @@ class SportsStatusUI(QtWidgets.QWidget):
         primary_layout = QtWidgets.QVBoxLayout(self)
 
         self.scheduled_time_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
-        self.scheduled_time_label.setMaximumHeight(20)
+        self.scheduled_time_label.setMaximumHeight(STANDARD_FONT_SIZE)
         primary_layout.addWidget(self.scheduled_time_label)
 
         logos_layout = self.create_logo_widgets()
         primary_layout.addLayout(logos_layout)
         
         self.game_time_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
-        self.game_time_label.setMaximumHeight(20)
+        self.game_time_label.setMaximumHeight(STANDARD_FONT_SIZE)
         primary_layout.addWidget(self.game_time_label)
         
         self.period_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
-        self.period_label.setMaximumHeight(20)
+        self.period_label.setMaximumHeight(STANDARD_FONT_SIZE)
         primary_layout.addWidget(self.period_label)
 
     def create_logo_widgets(self):
