@@ -146,6 +146,8 @@ class SportsStatusUI(QtWidgets.QWidget):
             STANDARD_FONT_SIZE
         ))
 
+        self.setCursor(QtCore.Qt.BlankCursor)
+
     def create_widgets(self):
         primary_layout = QtWidgets.QVBoxLayout(self)
 
@@ -219,12 +221,15 @@ class SportsStatusUI(QtWidgets.QWidget):
     def set_events(self, events):
         if len(self.events) > 0:
             previous_event_id = self.events[self.current_event_index].id
-            self.progress_bar.setVisible(True)
         else:
             previous_event_id = None
-            self.progress_bar.setVisible(False)
 
         self.events = events
+            
+        if len(self.events) > 1:
+            self.progress_bar.setVisible(True)
+        else:
+            self.progress_bar.setVisible(False)
 
         if self.debug:
             print("Assigned {} events to UI".format(len(self.events)))
