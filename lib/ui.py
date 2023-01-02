@@ -22,7 +22,7 @@ class TeamLayout(QtWidgets.QVBoxLayout):
         
     def create_widgets(self):
         self.name_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
-        self.name_label.setMaximumHeight(STANDARD_FONT_SIZE)
+        self.name_label.setMaximumHeight(STANDARD_FONT_SIZE + (STANDARD_FONT_SIZE//8))
         self.addWidget(self.name_label)
 
         self.logo = QtWidgets.QLabel()
@@ -32,7 +32,7 @@ class TeamLayout(QtWidgets.QVBoxLayout):
         self.addWidget(self.logo)
         
         self.score_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
-        self.score_label.setMaximumHeight(SCORE_FONT_SIZE)
+        self.score_label.setMaximumHeight(SCORE_FONT_SIZE + (STANDARD_FONT_SIZE//8))
         self.addWidget(self.score_label)
         
     def update_image(self):
