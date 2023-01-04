@@ -10,6 +10,8 @@ image_cache_directory = os.path.realpath(os.path.join(lib_dir, "..", "cache"))
 if not os.path.isdir(image_cache_directory):
     os.makedirs(image_cache_directory)
 
+folder_lock = threading.Lock()
+
 def get_image_and_assign_work(team, logo_layout):
     image_url = team.logo_dark
 
@@ -19,8 +21,9 @@ def get_image_and_assign_work(team, logo_layout):
     local_league_path = os.path.join(image_cache_directory, league_name)
     local_image_path = os.path.join(local_league_path, image_name)
 
-    if not os.path.isdir(local_league_path):
-        os.makedirs(local_league_path)
+    with folder_lock:
+        if not os.path.isdir(local_league_path):
+            os.makedirs(local_league_path)
     
     if not os.path.isfile(local_image_path):
         # Clear the logo while we're loading the new one

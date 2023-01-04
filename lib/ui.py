@@ -13,6 +13,12 @@ SCORE_FONT_SIZE = 100
 FONT_FAMILY = "Arial"
 
 class TeamLayout(QtWidgets.QVBoxLayout):
+    set_name = QtCore.Signal(str)
+    set_logo = QtCore.Signal(QtGui.QPixmap)
+    set_logo_disabled = QtCore.Signal(bool)
+    set_score = QtCore.Signal(str)
+    set_score_stylesheet = QtCore.Signal(str)
+
     def __init__(self):
         super().__init__()
         
@@ -24,22 +30,27 @@ class TeamLayout(QtWidgets.QVBoxLayout):
         self.name_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
         self.name_label.setMaximumHeight(STANDARD_FONT_SIZE + (STANDARD_FONT_SIZE//8))
         self.addWidget(self.name_label)
+        self.set_name.connect(self.name_label.setText)
 
         self.logo = QtWidgets.QLabel()
         self.logo.setMinimumSize(QtCore.QSize(150, 150))
         self.logo.installEventFilter(self)
         self.logo.setAlignment(QtCore.Qt.AlignCenter)
         self.addWidget(self.logo)
+        self.set_logo.connect(self.logo.setPixmap)
+        self.set_logo_disabled.connect(self.logo.setDisabled)
         
         self.score_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
         self.score_label.setMaximumHeight(SCORE_FONT_SIZE + (STANDARD_FONT_SIZE//8))
         self.addWidget(self.score_label)
+        self.set_score.connect(self.score_label.setText)
+        self.set_score_stylesheet.connect(self.score_label.setStyleSheet)
         
     def update_image(self):
         if self.local_image_path:
-            self.logo.setPixmap(QtGui.QPixmap(self.local_image_path).scaled(self.logo.size(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+            self.set_logo.emit(QtGui.QPixmap(self.local_image_path).scaled(self.logo.size(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
         else:
-            self.logo.setPixmap(QtGui.QPixmap())
+            self.set_logo.emit(QtGui.QPixmap())
         
     def eventFilter(self, source, event):
         """We only use this function so we can ensure the image scales
@@ -51,8 +62,8 @@ class TeamLayout(QtWidgets.QVBoxLayout):
     
     def show_team(self, team, event_started, event_ended):
         if not team:
-            self.name_label.setText("")
-            self.score_label.setText("")
+            self.set_name.emit("")
+            self.set_score.emit("")
             self.local_image_path = None
             self.update_image()
         else:
@@ -63,24 +74,24 @@ class TeamLayout(QtWidgets.QVBoxLayout):
             else:
                 home_text = ""
 
-            self.name_label.setText("{}{}".format(team.name, home_text))
+            self.set_name.emit("{}{}".format(team.name, home_text))
 
             if event_started:
-                self.score_label.setText(team.score)
+                self.set_score.emit(team.score)
             else:
-                self.score_label.setText("")
+                self.set_score.emit("")
             
             if event_ended and not team.winner:
-                self.logo.setDisabled(True)
+                self.set_logo_disabled.emit(True)
             else:
-                self.logo.setDisabled(False)
+                self.set_logo_disabled.emit(False)
             
             if event_ended and team.winner:
                 font_weight = "bold"
             else:
                 font_weight = "normal"
 
-            self.score_label.setStyleSheet("""
+            self.set_score_stylesheet.emit("""
                 font-weight: {};
                 font-family: {};
                 font-size: {}px;
@@ -92,6 +103,8 @@ class TeamLayout(QtWidgets.QVBoxLayout):
 
 class SportsStatusUI(QtWidgets.QWidget):
     progress_changed = QtCore.Signal(int)
+    set_scheduled_time_text = QtCore.Signal(str)
+    set_game_time_text = QtCore.Signal(str)
 
     def __init__(self, debug=False):
         super().__init__()
@@ -153,6 +166,7 @@ class SportsStatusUI(QtWidgets.QWidget):
 
         self.scheduled_time_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
         self.scheduled_time_label.setMaximumHeight(STANDARD_FONT_SIZE)
+        self.set_scheduled_time_text.connect(self.scheduled_time_label.setText)
         primary_layout.addWidget(self.scheduled_time_label)
 
         logos_layout = self.create_logo_widgets()
@@ -160,11 +174,8 @@ class SportsStatusUI(QtWidgets.QWidget):
         
         self.game_time_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
         self.game_time_label.setMaximumHeight(STANDARD_FONT_SIZE)
+        self.set_game_time_text.connect(self.game_time_label.setText)
         primary_layout.addWidget(self.game_time_label)
-        
-        self.period_label = QtWidgets.QLabel(alignment=QtCore.Qt.AlignCenter)
-        self.period_label.setMaximumHeight(STANDARD_FONT_SIZE)
-        primary_layout.addWidget(self.period_label)
         
         self.progress_bar = QtWidgets.QProgressBar()
         self.progress_bar.setTextVisible(False)
@@ -274,44 +285,53 @@ class SportsStatusUI(QtWidgets.QWidget):
     
     def show_event(self, event):
         if not event:
-            self.scheduled_time_label.setText("No Games Today")
+            self.set_scheduled_time_text.emit("No Games Today")
             
             self.team_1_layout.show_team(None, False, False)
             self.team_2_layout.show_team(None, False, False)
 
-            self.game_time_label.setText("")
-            self.period_label.setText("")
+            self.set_game_time_text.emit("")
         else:
             if self.debug:
                 print("Showing event: {}".format(event.name))
 
-            time_of_day_string = event.datetime.strftime("%I:%M %p").lstrip("0")
-            current_datetime = datetime.datetime.now()
-            if event.datetime.date() > current_datetime.date():
-                day_string = "Tomorrow "
-            elif event.datetime.date() < current_datetime.date():
-                day_string = "Yesterday "
-            else:
-                day_string = ""
-                
-            time_string = "{}{}".format(day_string, time_of_day_string)
+            event_day = event.datetime.date()
 
-            self.scheduled_time_label.setText(time_string)
+            current_datetime = datetime.datetime.now()
+            current_day = current_datetime.date()
+            
+            day_difference = current_day - event_day
+            
+            print(event_day)
+            print(current_day)
+            print(day_difference)
+
+            if abs(day_difference.days) == 1:
+                if day_difference.days < 0:
+                    day_string = "Tomorrow"
+                else:
+                    day_string = "Yesterday"
+            elif day_difference.days == 0:
+                day_string = ""
+            else:
+                day_string = event.datetime.strftime("%m/%d")
+
+            time_of_day_string = event.datetime.strftime("%I:%M %p").lstrip("0")
+                
+            scheduled_time_string = "{} {}".format(day_string, time_of_day_string)
+
+            self.set_scheduled_time_text.emit(scheduled_time_string)
 
             team_1 = event.competitors[0]
             team_2 = event.competitors[1]
             
             if not event.status.started:
-                self.game_time_label.setText("")
-                self.period_label.setText("")
+                self.set_game_time_text.emit("")
             else:
                 if not event.status.completed:
-                    self.game_time_label.setText(event.status.display_clock)
-                    # TODO: Make unique per sport
-                    self.period_label.setText("Period: {}".format(event.status.period))
+                    self.set_game_time_text.emit(event.status.display_clock)
                 else:
-                    self.game_time_label.setText(event.status.description)
-                    self.period_label.setText("")
+                    self.set_game_time_text.emit(event.status.description)
 
             self.team_1_layout.show_team(team_1, event.status.started, event.status.completed)
             self.team_2_layout.show_team(team_2, event.status.started, event.status.completed)
