@@ -302,10 +302,6 @@ class SportsStatusUI(QtWidgets.QWidget):
             
             day_difference = current_day - event_day
             
-            print(event_day)
-            print(current_day)
-            print(day_difference)
-
             if abs(day_difference.days) == 1:
                 if day_difference.days < 0:
                     day_string = "Tomorrow"
@@ -328,10 +324,7 @@ class SportsStatusUI(QtWidgets.QWidget):
             if not event.status.started:
                 self.set_game_time_text.emit("")
             else:
-                if not event.status.completed:
-                    self.set_game_time_text.emit(event.status.display_clock)
-                else:
-                    self.set_game_time_text.emit(event.status.description)
+                self.set_game_time_text.emit(event.get_game_time_string())
 
             self.team_1_layout.show_team(team_1, event.status.started, event.status.completed)
             self.team_2_layout.show_team(team_2, event.status.started, event.status.completed)

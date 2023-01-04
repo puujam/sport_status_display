@@ -115,6 +115,35 @@ class ESPNEvent():
     def id(self):
         return self.data["id"]
 
+    def get_game_time_string(self):
+        if not self.status.started:
+            return "Not Started"
+        elif self.status.completed:
+            return self.status.description
+        else:
+            return "Period {} - {}".format(self.status.period, self.status.display_clock)
+
+class ESPNFootballGame(ESPNEvent):
+    def __init__(self, data, league):
+        super().__init__(data, league)
+    
+    def get_game_time_string(self):
+        if not self.status.started:
+            return "Not Started"
+        elif self.status.completed:
+            return self.status.description
+        else:
+            if self.status.period == 1:
+                quarter_string = "1st"
+            elif self.status.period == 2:
+                quarter_string = "2nd"
+            elif self.status.period == 3:
+                quarter_string = "3rd"
+            else:
+                quarter_string = "4th"
+            
+            return "{} - {}".format(quarter_string, self.status.display_clock)
+
 class ESPNLeague():
     def __init__(self, data, sport):
         self.data = data
@@ -135,6 +164,12 @@ class ESPNLeague():
 class ESPNNFL(ESPNLeague):
     def __init__(self, data, sport):
         super().__init__(data, sport)
+        
+    def parse_events(self):
+        self.events = list()
+
+        for event_data in self.data["events"]:
+            self.events.append(ESPNFootballGame(event_data, self))
 
 class ESPNSport():
     def __init__(self, data):

@@ -7,7 +7,7 @@ def main():
     app = QtWidgets.QApplication([])
     app.setOverrideCursor(QtCore.Qt.BlankCursor)
 
-    ui = ui_lib.SportsStatusUI(debug=True)
+    ui = ui_lib.SportsStatusUI(debug=False)
     ui.show()
     
     sys.exit(app.exec())
