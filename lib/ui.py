@@ -304,17 +304,17 @@ class SportsStatusUI(QtWidgets.QWidget):
             
             if abs(day_difference.days) == 1:
                 if day_difference.days < 0:
-                    day_string = "Tomorrow"
+                    day_string = "Tomorrow "
                 else:
-                    day_string = "Yesterday"
+                    day_string = "Yesterday "
             elif day_difference.days == 0:
                 day_string = ""
             else:
-                day_string = event.datetime.strftime("%m/%d")
+                day_string = event.datetime.strftime("%A (%m/%d) ")
 
             time_of_day_string = event.datetime.strftime("%I:%M %p").lstrip("0")
                 
-            scheduled_time_string = "{} {}".format(day_string, time_of_day_string)
+            scheduled_time_string = "{}{}".format(day_string, time_of_day_string)
 
             self.set_scheduled_time_text.emit(scheduled_time_string)
 
