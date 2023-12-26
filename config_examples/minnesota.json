@@ -15,6 +15,14 @@
                                 "name": "Vikings"
                             }
                         ]
+                    },
+                    {
+                        "abbreviation": "college-football",
+                        "competitors": [
+                            {
+                            "name": "Minnesota"
+                            }
+                        ]
                     }
                 ]
                                     
@@ -27,6 +35,14 @@
                         "competitors": [
                             {
                                 "name": "Twins"
+                            }
+                        ]
+                    },
+                    {
+                        "abbreviation": "college-baseball",
+                        "competitors": [
+                            {
+                            "name": "Minnesota"
                             }
                         ]
                     }
@@ -42,6 +58,14 @@
                                 "name": "Timberwolves"
                             }
                         ]
+                    },
+                    {
+                        "abbreviation": "mens-college-basketball",
+                        "competitors": [
+                            {
+                            "name": "Minnesota"
+                            }
+                        ]
                     }
                 ]
             },
@@ -53,6 +77,14 @@
                         "competitors": [
                             {
                                 "name": "Wild"
+                            }
+                        ]
+                    },
+                    {
+                        "abbreviation": "mens-college-hockey",
+                        "competitors": [
+                            {
+                            "name": "Minnesota"
                             }
                         ]
                     }
